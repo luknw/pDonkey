@@ -8,7 +8,7 @@ package agh.cs.pdonkey;
 public class Main {
     public static void main(String[] args) {
         AppData config = null;
-        DataAccessObject dao = null;
+        DataProcessor dao = null;
 
         switch (config.getMode()) {
             case SUM_EXPENSES:

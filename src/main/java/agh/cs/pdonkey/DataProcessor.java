@@ -7,7 +7,7 @@ import java.util.List;
  * Created by luknw on 15.12.2016
  */
 
-public interface DataAccessObject {
+public interface DataProcessor {
     double getSumExpenses(MP mp);
 
     double getMinorExpenses(MP mp);
