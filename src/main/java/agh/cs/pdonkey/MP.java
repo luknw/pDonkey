@@ -7,6 +7,4 @@ package agh.cs.pdonkey;
 
 public interface MP {
     String getName();
-
-    String getSurname();
 }

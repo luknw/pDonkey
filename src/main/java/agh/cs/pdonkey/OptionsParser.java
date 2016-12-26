@@ -6,5 +6,5 @@ package agh.cs.pdonkey;
  */
 
 public interface OptionsParser {
-    AppData parse(String[] options);
+    AppConfig parse(String[] options);
 }

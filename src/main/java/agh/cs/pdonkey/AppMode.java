@@ -8,8 +8,9 @@ package agh.cs.pdonkey;
 public enum AppMode {
     SUM_EXPENSES,
     MINOR_EXPENSES,
-    AVG_MP_EXPENSES,
-    TOP_TRAVELS,
+    AVG_EXPENSES,
+    TOP_TRAVELS_ABROAD,
     TOP_TIME_ABROAD,
-    MACARONIERIS,
+    MOST_EXPENSIVE_TRAVEL,
+    MACARONIERIS
 }

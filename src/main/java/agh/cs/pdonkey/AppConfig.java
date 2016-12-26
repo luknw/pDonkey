@@ -5,7 +5,7 @@ package agh.cs.pdonkey;
  * Created by luknw on 15.12.2016
  */
 
-public interface AppData {
+public interface AppConfig {
     AppMode getMode();
 
     MP getMP();

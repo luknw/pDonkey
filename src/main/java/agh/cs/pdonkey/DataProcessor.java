@@ -1,5 +1,6 @@
 package agh.cs.pdonkey;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -8,15 +9,17 @@ import java.util.List;
  */
 
 public interface DataProcessor {
-    double getSumExpenses(MP mp);
+    double getExpensesSum(MP mp) throws IOException;
 
-    double getMinorExpenses(MP mp);
+    double getMinorExpenses(MP mp) throws IOException;
 
-    double getAvgMpExpenses();
+    double getAvgMpsExpenses() throws IOException;
 
-    MP getTopTravelsMp();
+    MP getTopTravellerMp() throws IOException;
 
-    MP getTopTimeAbroadMp();
+    MP getTopTimeAbroadMp() throws IOException;
 
-    List<MP> getMacaronieris();
+    MP getMostExpensiveTravelMp() throws IOException;
+
+    List<MP> getMacaronieris() throws IOException;
 }
