@@ -1,5 +1,6 @@
 package agh.cs.pdonkey;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -46,51 +47,39 @@ class ApiHelper {
     static final String TRAVEL_DAYS = "poslowie_wyjazdy_wydarzenia.liczba_dni";
     static final String TRAVEL_LOCATION = "poslowie_wyjazdy_wydarzenia.lokalizacja";
     static final String START_DATE = "poslowie_wyjazdy_wydarzenia.data_start";
+    //errors
+    private static final String API_CONNECTION_ERROR = "Internet webservice unavailable";
+    private static final String INVALID_URL = "Invalid URL: ";
+    private static final String JSON_PROCESSING_ERROR = "Json processing error at ";
+    private static final String UNEXPECTED_INTERRUPT = "Unexpected interrupt during webservice connection";
 
     //paging (experimental)
-    static final int PARALLELISM = 4;
-    static final int ELEMENTS_PER_PAGE = 130;
-    static final String COUNT = "Count";
-    static final String PAGE = "&page=";
+    private static final int PARALLELISM = 20;
+    private static final int ELEMENTS_PER_PAGE = 50;
+    private static final String COUNT = "Count";
+    private static final String PAGE = "&page=";
 
 
-    URL getUrl(String urlPath, List<String> queryOptions) throws MalformedURLException {
-        return new URL(getUrlBuilder(urlPath, queryOptions).toString());
-    }
-
-    private StringBuilder getUrlBuilder(String urlPath, List<String> queryOptions) {
-        StringBuilder sb =
-                new StringBuilder(API_ENTRY)
-                        .append(urlPath)
-                        .append(QUERY_OPTIONS);
-        if (queryOptions != null) {
-            for (String option : queryOptions) {
-                sb.append(option);
-            }
+    URL getUrl(String urlPath, List<String> queryOptions) throws IOException {
+        String urlString = getUrlBuilder(urlPath, queryOptions).toString();
+        try {
+            return new URL(urlString);
+        } catch (MalformedURLException e) {
+            throw new IOException(INVALID_URL + urlString, e);
         }
-        return sb;
     }
-
 
     JsonNode getNode(URL source) throws IOException {
-        return getNode(source, null);
-    }
-
-    JsonNode getNode(URL source, List<String> jsonPath) throws IOException {
-        JsonNode node = new ObjectMapper().readTree(source);
-        return followPath(node, jsonPath);
-    }
-
-
-    JsonNode followPath(JsonNode node, List<String> jsonPath) {
-        if (jsonPath != null) {
-            for (String path : jsonPath) {
-                node = node.path(path);
-            }
+        JsonNode node;
+        try {
+            node = new ObjectMapper().readTree(source);
+        } catch (JsonProcessingException e) {
+            throw new IOException(JSON_PROCESSING_ERROR + e.getLocation(), e);
+        } catch (IOException e) {
+            throw new IOException(API_CONNECTION_ERROR, e);
         }
-        return node;
+        return followPath(node, null);
     }
-
 
     Stream<JsonNode> streamList(String urlPath, List<String> queryOptions, List<String> jsonPath)
             throws IOException {
@@ -114,22 +103,47 @@ class ApiHelper {
                                     page -> {
                                         try {
                                             return getNode(new URL(baseUrl + page));
+                                        } catch (MalformedURLException e) {
+                                            throw new UncheckedIOException(INVALID_URL + e.getMessage(), e);
                                         } catch (IOException e) {
-                                            throw new UncheckedIOException(e);
+                                            throw new UncheckedIOException(e.getMessage(), e);
                                         }
                                     })
                             .flatMap(node -> StreamSupport
                                     .stream(followPath(node, jsonPath).spliterator(), true))
                     ).get();
-        } catch (UncheckedIOException e) {
-            throw e.getCause();
         } catch (InterruptedException | ExecutionException e) {
-            throw new IOException(e);
+            throw new IOException(UNEXPECTED_INTERRUPT, e);
+        } catch (UncheckedIOException e) {
+            throw new IOException(e.getMessage(), e);
         }
     }
 
-    int getPageCount(URL url) throws IOException {
-        int count = getNode(url).get(COUNT).asInt();
+
+    private StringBuilder getUrlBuilder(String urlPath, List<String> queryOptions) {
+        StringBuilder sb =
+                new StringBuilder(API_ENTRY)
+                        .append(urlPath)
+                        .append(QUERY_OPTIONS);
+        if (queryOptions != null) {
+            for (String option : queryOptions) {
+                sb.append(option);
+            }
+        }
+        return sb;
+    }
+
+    private JsonNode followPath(JsonNode node, List<String> jsonPath) {
+        if (jsonPath != null) {
+            for (String path : jsonPath) {
+                node = node.path(path);
+            }
+        }
+        return node;
+    }
+
+    private int getPageCount(URL url) throws IOException {
+        int count = getNode(url).path(COUNT).asInt();
         int pageCount = count / ELEMENTS_PER_PAGE;
         if (count % ELEMENTS_PER_PAGE != 0) {
             ++pageCount;

@@ -1,7 +1,6 @@
 package agh.cs.pdonkey;
 
 import java.io.IOException;
-import java.util.NoSuchElementException;
 
 /**
  * pDonkey
@@ -9,9 +8,6 @@ import java.util.NoSuchElementException;
  */
 
 public class Main {
-    private static final String NO_SUCH_VALUE = "No such value";
-    private static final String DATA_ACCESS_ERROR = "Data access error";
-
     public static void main(String[] args) {
         //todo add tests
         //todo add exception messages
@@ -19,7 +15,7 @@ public class Main {
         try {
             config = new OptionsParserImpl().parse(args);
         } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
             return;
         }
 
@@ -49,9 +45,7 @@ public class Main {
                     break;
             }
         } catch (IOException e) {
-            System.err.println(DATA_ACCESS_ERROR);
-        } catch (NoSuchElementException e) {
-            System.err.println(NO_SUCH_VALUE);
+            System.err.println(e.getMessage());
         }
     }
 }

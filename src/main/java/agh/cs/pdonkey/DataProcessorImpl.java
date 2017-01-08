@@ -28,13 +28,9 @@ public class DataProcessorImpl implements DataProcessor {
     private static final int TERM_END_YEAR = 2015;
     private static final String NOODLE_LAND = "WŁOCHY";
 
-    private ApiHelper api = new ApiHelper();
+    private static final String DATA_PROCESSING_ERROR = "Data processing error";
 
-//    private Map<MP, Long> daysAbroad;
-//    private MP currentCandidate;
-//    private Set<MP> macaronieris;
-//
-//    private double maxTravelCost;
+    private ApiHelper api = new ApiHelper();
 
     @Override
     public double getExpensesSum(MP mp) throws IOException {
@@ -50,15 +46,20 @@ public class DataProcessorImpl implements DataProcessor {
     }
 
     private int getMpId(MP mp) throws IOException {
-        return streamMpNodes()
-                .filter(
-                        mpNode -> {
-                            String name = mpNode.path(DATA).path(MP_NAME).asText();
-                            return mp.getName().equals(name);
-                        })
-                .mapToInt(mpNode -> mpNode.path(MP_ID).asInt())
-                .findFirst()
-                .orElseThrow(NoSuchElementException::new);
+        try {
+
+            return streamMpNodes()
+                    .filter(
+                            mpNode -> {
+                                String name = mpNode.path(DATA).path(MP_NAME).asText();
+                                return mp.getName().equals(name);
+                            })
+                    .mapToInt(mpNode -> mpNode.path(MP_ID).asInt())
+                    .findFirst()
+                    .orElseThrow(NoSuchElementException::new);
+        } catch (NoSuchElementException e) {
+            throw new IOException(DATA_PROCESSING_ERROR, e);
+        }
     }
 
     private Stream<JsonNode> streamMpNodes() throws IOException {
@@ -81,7 +82,6 @@ public class DataProcessorImpl implements DataProcessor {
                 && year.path(YEAR).asInt() <= TERM_END_YEAR;
     }
 
-
     @Override
     public double getMinorExpenses(MP mp) throws IOException {
         return streamExpensesByYear(getMpId(mp))
@@ -94,7 +94,6 @@ public class DataProcessorImpl implements DataProcessor {
                 .sum();
     }
 
-
     @Override
     public double getAvgMpsExpenses() throws IOException {
         // Includes ugly workaround for the inability to throw
@@ -103,36 +102,39 @@ public class DataProcessorImpl implements DataProcessor {
             return streamMpNodes()
                     .mapToDouble(
                             mpNode -> {
-                                double tmp = 0;
+                                double tmp;
                                 try {
                                     tmp = getExpensesSumById(mpNode.path(MP_ID).asInt());
                                 } catch (IOException e) {
-                                    throw new UncheckedIOException(e);
+                                    throw new UncheckedIOException(e.getMessage(), e);
                                 }
                                 return tmp;
                             })
                     .average()
                     .orElseThrow(NoSuchElementException::new);
-        } catch (UncheckedIOException e) {
-            throw e.getCause();
+        } catch (UncheckedIOException | NoSuchElementException e) {
+            throw new IOException(DATA_PROCESSING_ERROR, e);
         }
     }
 
-
     @Override
     public MP getTopTravellerMp() throws IOException {
-        return streamTravels()
-                .filter(this::withTerm)
-                .map(node -> new MPImpl(node.path(MP_NAME).asText()))
-                .collect(Collectors
-                        .groupingByConcurrent(
-                                Function.identity(),
-                                Collectors.counting()))
-                .entrySet()
-                .parallelStream()
-                .max(Map.Entry.comparingByValue())
-                .orElseThrow(NoSuchElementException::new)
-                .getKey();
+        try {
+            return streamTravels()
+                    .filter(this::withTerm)
+                    .map(node -> new MPImpl(node.path(MP_NAME).asText()))
+                    .collect(Collectors
+                            .groupingByConcurrent(
+                                    Function.identity(),
+                                    Collectors.counting()))
+                    .entrySet()
+                    .parallelStream()
+                    .max(Map.Entry.comparingByValue())
+                    .orElseThrow(NoSuchElementException::new)
+                    .getKey();
+        } catch (NoSuchElementException e) {
+            throw new IOException(DATA_PROCESSING_ERROR, e);
+        }
     }
 
     private Stream<JsonNode> streamTravels() throws IOException {
@@ -152,61 +154,41 @@ public class DataProcessorImpl implements DataProcessor {
                 && startYear <= TERM_END_YEAR;
     }
 
-//    private void count(JsonNode travel) {
-//        travel = travel.path(DATA);
-//        MP mp = new MPImpl(travel.path(MP_NAME).asText());
-//        int currentTravelsAbroad = travelsAbroad.getOrDefault(mp, 0);
-//        currentTravelsAbroad++;
-//        travelsAbroad.put(mp, currentTravelsAbroad);
-//    }
-
 
     @Override
     public MP getTopTimeAbroadMp() throws IOException {
-        return streamTravels()
-                .filter(this::withTerm)
-                .collect(Collectors.groupingBy(
-                        travel -> new MPImpl(travel.path(MP_NAME).asText()),
-                        Collectors.summingLong(travel -> travel.path(TRAVEL_DAYS).asLong())))
-                .entrySet()
-                .parallelStream()
-                .max(Map.Entry.comparingByValue())
-                .orElseThrow(NoSuchElementException::new)
-                .getKey();
+        try {
+            return streamTravels()
+                    .filter(this::withTerm)
+                    .collect(Collectors.groupingByConcurrent(
+                            travel -> new MPImpl(travel.path(MP_NAME).asText()),
+                            Collectors.summingLong(travel -> travel.path(TRAVEL_DAYS).asLong())))
+                    .entrySet()
+                    .parallelStream()
+                    .max(Map.Entry.comparingByValue())
+                    .orElseThrow(NoSuchElementException::new)
+                    .getKey();
+        } catch (NoSuchElementException e) {
+            throw new IOException(DATA_PROCESSING_ERROR, e);
+        }
     }
-//
-//    private void updateTimes(JsonNode travel) {
-//        travel = travel.path(DATA);
-//        int travelDays = travel.path(TRAVEL_DAYS).asInt();
-//        MP mp = new MPImpl(travel.path(MP_NAME).asText());
-//
-//        int currentDaysAbroad = daysAbroad.getOrDefault(mp, 0);
-//        currentDaysAbroad += travelDays;
-//        daysAbroad.put(mp, currentDaysAbroad);
-//    }
-
 
     @Override
     public MP getMostExpensiveTravelMp() throws IOException {
-        return streamTravels()
-                .filter(this::withTerm)
-                .max(Comparator.comparingDouble(
-                        travel -> travel
-                                .path(TRAVEL_COST)
-                                .asDouble()))
-                .map(travel -> new MPImpl(travel.path(MP_NAME).asText()))
-                .orElseThrow(NoSuchElementException::new);
-    }
-//
-//    private void compareCost(JsonNode travel) {
-//        travel = travel.path(DATA);
-//        double travelCost = travel.path(TRAVEL_COST).asDouble();
-//        if (travelCost > maxTravelCost) {
-//            currentCandidate = new MPImpl(travel.path(MP_NAME).asText());
-//            maxTravelCost = travelCost;
-//        }
-//    }
+        try {
+            return streamTravels()
+                    .filter(this::withTerm)
+                    .max(Comparator.comparingDouble(
+                            travel -> travel
+                                    .path(TRAVEL_COST)
+                                    .asDouble()))
+                    .map(travel -> new MPImpl(travel.path(MP_NAME).asText()))
+                    .orElseThrow(NoSuchElementException::new);
 
+        } catch (NoSuchElementException e) {
+            throw new IOException(DATA_PROCESSING_ERROR, e);
+        }
+    }
 
     @Override
     public List<MP> getMacaronieris() throws IOException {
@@ -229,13 +211,4 @@ public class DataProcessorImpl implements DataProcessor {
                         .split("\\s", 2)
                         [0]);
     }
-//
-//    private void noodleInspection(JsonNode travel) {
-//        travel = travel.path(DATA);
-//        //API location format: "WŁOCHY Rzym"
-//        String country = travel.path(TRAVEL_LOCATION).asText().split("\\s", 2)[0];
-//        if (NOODLE_LAND.equals(country)) {
-//            macaronieris.add(new MPImpl(travel.path(MP_NAME).asText()));
-//        }
-//    }
 }
