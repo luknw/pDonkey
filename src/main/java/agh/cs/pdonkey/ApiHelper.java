@@ -9,8 +9,6 @@ import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -48,14 +46,14 @@ class ApiHelper {
     static final String TRAVEL_LOCATION = "poslowie_wyjazdy_wydarzenia.lokalizacja";
     static final String START_DATE = "poslowie_wyjazdy_wydarzenia.data_start";
     //errors
-    private static final String API_CONNECTION_ERROR = "Internet webservice unavailable";
+    private static final String API_ERROR = "Internet webservice error";
     private static final String INVALID_URL = "Invalid URL: ";
     private static final String JSON_PROCESSING_ERROR = "Json processing error at ";
-    private static final String UNEXPECTED_INTERRUPT = "Unexpected interrupt during webservice connection";
 
     //paging (experimental)
-    private static final int PARALLELISM = 20;
-    private static final int ELEMENTS_PER_PAGE = 50;
+    private static final int PARALLELISM = 30;
+    private static final int ELEMENTS_PER_PAGE = 17;
+    private static final String COMMON_FORK_JOIN_POOL_SIZE = "java.util.concurrent.ForkJoinPool.common.parallelism";
     private static final String COUNT = "Count";
     private static final String PAGE = "&page=";
 
@@ -76,9 +74,9 @@ class ApiHelper {
         } catch (JsonProcessingException e) {
             throw new IOException(JSON_PROCESSING_ERROR + e.getLocation(), e);
         } catch (IOException e) {
-            throw new IOException(API_CONNECTION_ERROR, e);
+            throw new IOException(API_ERROR, e);
         }
-        return followPath(node, null);
+        return node;
     }
 
     Stream<JsonNode> streamList(String urlPath, List<String> queryOptions, List<String> jsonPath)
@@ -90,33 +88,31 @@ class ApiHelper {
         int pageCount = getPageCount(new URL(urlBase.toString() + 1));
         String baseUrl = urlBase.append(ELEMENTS_PER_PAGE).append(PAGE).toString();
 
-        // Ugly as hell workaround found in internetz for two Java issues
-        // 1. Parallel streams and thread pools -> ForkJoinPool
-        // 2. Checked exceptions inside lambda expressions -> rethrow as unchecked
-        // I don't even. The curve is appreciable, though.
+        //change size of the common fork join pool to speed up parallel streams
+        System.setProperty(COMMON_FORK_JOIN_POOL_SIZE, Integer.toString(PARALLELISM));
+
+        Stream<JsonNode> result;
         try {
-            return new ForkJoinPool(PARALLELISM)
-                    .submit(() -> IntStream
-                            .rangeClosed(1, pageCount)
-                            .parallel()
-                            .mapToObj(
-                                    page -> {
-                                        try {
-                                            return getNode(new URL(baseUrl + page));
-                                        } catch (MalformedURLException e) {
-                                            throw new UncheckedIOException(INVALID_URL + e.getMessage(), e);
-                                        } catch (IOException e) {
-                                            throw new UncheckedIOException(e.getMessage(), e);
-                                        }
-                                    })
-                            .flatMap(node -> StreamSupport
-                                    .stream(followPath(node, jsonPath).spliterator(), true))
-                    ).get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new IOException(UNEXPECTED_INTERRUPT, e);
+            result = IntStream
+                    .rangeClosed(1, pageCount)
+                    .parallel()
+                    .mapToObj(
+                            page -> {
+                                try {
+                                    return getNode(new URL(baseUrl + page));
+                                } catch (MalformedURLException e) {
+                                    throw new UncheckedIOException(INVALID_URL + e.getMessage(), e);
+                                } catch (IOException e) {
+                                    throw new UncheckedIOException(e.getMessage(), e);
+                                }
+                            })
+                    .flatMap(node -> StreamSupport
+                            .stream(followPath(node, jsonPath).spliterator(), true));
         } catch (UncheckedIOException e) {
             throw new IOException(e.getMessage(), e);
         }
+
+        return result;
     }
 
 

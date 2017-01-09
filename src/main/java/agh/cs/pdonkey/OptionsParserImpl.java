@@ -44,8 +44,7 @@ public class OptionsParserImpl implements OptionsParser {
         AppMode mode = getModeByArgument(args[0]);
 
         MP mp = (args.length >= 2) ? getMPByArgument(args[1]) : null;
-        if (mp == null && (mode == AppMode.SUM_EXPENSES
-                || mode == AppMode.MINOR_EXPENSES))
+        if (mp == null && (mode == AppMode.SUM_EXPENSES || mode == AppMode.MINOR_EXPENSES))
             throw new IllegalArgumentException(PROVIDE_MP_IDENTITY);
 
         return new AppConfigImpl(mode, mp);
