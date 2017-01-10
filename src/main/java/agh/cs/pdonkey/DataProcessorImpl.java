@@ -10,12 +10,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static agh.cs.pdonkey.ApiHelper.*;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.*;
 
 /**
  * pDonkey
@@ -27,8 +27,10 @@ public class DataProcessorImpl implements DataProcessor {
     private static final int TERM_START_YEAR = 2011;
     private static final int TERM_END_YEAR = 2015;
     private static final String NOODLE_LAND = "WŁOCHY";
+    private static final MP NEMO = new MPImpl("Not exists");
+    private static final double DEFAULT_AVERAGE = 0;
 
-    private static final String DATA_PROCESSING_ERROR = "Data processing error";
+    private static final String DATA_PROCESSING_ERROR = "Data processing error. Make sure the arguments are valid.";
 
     private ApiHelper api = new ApiHelper();
 
@@ -47,7 +49,6 @@ public class DataProcessorImpl implements DataProcessor {
 
     private int getMpId(MP mp) throws IOException {
         try {
-
             return streamMpNodes()
                     .filter(
                             mpNode -> {
@@ -112,8 +113,10 @@ public class DataProcessorImpl implements DataProcessor {
                             })
                     .average()
                     .orElseThrow(NoSuchElementException::new);
-        } catch (UncheckedIOException | NoSuchElementException e) {
+        } catch (UncheckedIOException e) {
             throw new IOException(DATA_PROCESSING_ERROR, e);
+        } catch (NoSuchElementException e) {
+            return DEFAULT_AVERAGE;
         }
     }
 
@@ -122,18 +125,17 @@ public class DataProcessorImpl implements DataProcessor {
         try {
             return streamTravels()
                     .filter(this::withTerm)
-                    .map(node -> new MPImpl(node.path(MP_NAME).asText()))
-                    .collect(Collectors
-                            .groupingByConcurrent(
-                                    Function.identity(),
-                                    Collectors.counting()))
+                    .map(node -> (MP) new MPImpl(node.path(MP_NAME).asText()))
+                    .collect(groupingByConcurrent(
+                            Function.identity(),
+                            counting()))
                     .entrySet()
                     .parallelStream()
                     .max(Map.Entry.comparingByValue())
                     .orElseThrow(NoSuchElementException::new)
                     .getKey();
         } catch (NoSuchElementException e) {
-            throw new IOException(DATA_PROCESSING_ERROR, e);
+            return NEMO;
         }
     }
 
@@ -160,16 +162,16 @@ public class DataProcessorImpl implements DataProcessor {
         try {
             return streamTravels()
                     .filter(this::withTerm)
-                    .collect(Collectors.groupingByConcurrent(
-                            travel -> new MPImpl(travel.path(MP_NAME).asText()),
-                            Collectors.summingLong(travel -> travel.path(TRAVEL_DAYS).asLong())))
+                    .collect(groupingByConcurrent(
+                            travel -> (MP) new MPImpl(travel.path(MP_NAME).asText()),
+                            summingLong(travel -> travel.path(TRAVEL_DAYS).asLong())))
                     .entrySet()
                     .parallelStream()
                     .max(Map.Entry.comparingByValue())
                     .orElseThrow(NoSuchElementException::new)
                     .getKey();
         } catch (NoSuchElementException e) {
-            throw new IOException(DATA_PROCESSING_ERROR, e);
+            return NEMO;
         }
     }
 
@@ -182,11 +184,11 @@ public class DataProcessorImpl implements DataProcessor {
                             travel -> travel
                                     .path(TRAVEL_COST)
                                     .asDouble()))
-                    .map(travel -> new MPImpl(travel.path(MP_NAME).asText()))
+                    .map(travel -> (MP) new MPImpl(travel.path(MP_NAME).asText()))
                     .orElseThrow(NoSuchElementException::new);
 
         } catch (NoSuchElementException e) {
-            throw new IOException(DATA_PROCESSING_ERROR, e);
+            return NEMO;
         }
     }
 
@@ -195,12 +197,20 @@ public class DataProcessorImpl implements DataProcessor {
         return streamTravels()
                 .filter(this::withTerm)
                 .filter(this::withNoodles)
-                .map(travel -> new MPImpl(travel.path(MP_NAME).asText()))
+                .map(travel -> (MP) new MPImpl(travel.path(MP_NAME).asText()))
                 .sorted((a, b) ->
                         Collator.getInstance()
                                 .compare(a.getName(), b.getName()))
                 .distinct()
-                .collect(Collectors.toList());
+                .collect(collectingAndThen(
+                        toList(),
+                        macaronieris -> {
+                            if (macaronieris.isEmpty()) {
+                                macaronieris.add(NEMO);
+                            }
+                            return macaronieris;
+                        })
+                );
     }
 
     private boolean withNoodles(JsonNode travel) {

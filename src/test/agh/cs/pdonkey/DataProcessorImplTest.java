@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -18,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 class DataProcessorImplTest {
     private static final DataProcessor dp = new DataProcessorImpl();
-    private static final MP volunteer = new MPImpl("Andrzej Duda");
+    private static final MP volunteer = new MPImpl("Jarosław Kaczyński");
     private static final MP nemesis = new MPImpl("Bronisław Komorowski");
 
     private static final String UNEXPECTED_IO_EXCEPTION = "Unexpected IO exception";
@@ -27,7 +26,7 @@ class DataProcessorImplTest {
 
     @Test
     void getExpensesSumJustWorks() {
-        double expected = 153345.54;
+        double expected = 418320.43;
 
         double actual = 0;
         try {
@@ -36,7 +35,7 @@ class DataProcessorImplTest {
             fail(UNEXPECTED_IO_EXCEPTION);
         }
 
-        assertEquals(expected, actual);
+        assertEquals(expected, actual, EPSILON);
     }
 
     @Test
@@ -59,7 +58,7 @@ class DataProcessorImplTest {
             fail(UNEXPECTED_IO_EXCEPTION);
         }
 
-        assertEquals(expected, actual);
+        assertEquals(expected, actual, EPSILON);
     }
 
     @Test
@@ -75,7 +74,6 @@ class DataProcessorImplTest {
     void getAvgMpsExpensesJustWorks() {
         double expected = 272247.607894;
 
-
         double actual = 1;
         try {
             actual = dp.getAvgMpsExpenses();
@@ -83,7 +81,7 @@ class DataProcessorImplTest {
             fail(UNEXPECTED_IO_EXCEPTION);
         }
 
-        assertTrue(Math.abs(expected - actual) < EPSILON);
+        assertEquals(expected, actual, EPSILON);
     }
 
     @Test
