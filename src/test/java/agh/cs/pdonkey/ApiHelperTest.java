@@ -29,7 +29,7 @@ class ApiHelperTest {
     private static final String EXPECTED_JSON_NODE_FILE_PATH = "src/test/resources/expectedNode.json";
     private static final String EXPECTED_NODE_ORIGIN_URL = "https://api-v3.mojepanstwo.pl/dane/poslowie/100";
 
-    private ApiHelper api = new ApiHelper();
+    private static final ApiHelper API = new ApiHelper();
 
     @Test
     void getUrlWithoutOptions() {
@@ -42,7 +42,7 @@ class ApiHelperTest {
 
         URL actual = null;
         try {
-            actual = api.getUrl("", null);
+            actual = API.getUrl("", null);
         } catch (IOException e) {
             fail(COULD_NOT_CREATE_VALID_URL);
         }
@@ -66,7 +66,7 @@ class ApiHelperTest {
 
         URL actual = null;
         try {
-            actual = api.getUrl("", queryOptions);
+            actual = API.getUrl("", queryOptions);
         } catch (IOException e) {
             fail(COULD_NOT_CREATE_VALID_URL);
         }
@@ -85,7 +85,7 @@ class ApiHelperTest {
 
         URL actual = null;
         try {
-            actual = api.getUrl(NONEXISTENT, null);
+            actual = API.getUrl(NONEXISTENT, null);
         } catch (IOException e) {
             fail(COULD_NOT_CREATE_VALID_URL);
         }
@@ -106,7 +106,7 @@ class ApiHelperTest {
 
         JsonNode actual = null;
         try {
-            actual = api.getNode(validUrl);
+            actual = API.getNode(validUrl);
         } catch (IOException e) {
             fail(DID_NOT_HANDLE_VALID_REQUEST);
         }
