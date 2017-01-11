@@ -9,8 +9,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -28,7 +26,6 @@ class ApiHelperTest {
     private static final String NONEXISTENT = "mikes_girlfriend";
     private static final String VALID_NONEXISTENT_URL_STRING = VALID_URL_STRING + NONEXISTENT;
     private static final String DID_NOT_HANDLE_VALID_REQUEST = "Didn't handle a valid request";
-    private static final String UNEXPECTED_IO_EXCEPTION = "Unexpected IO exception";
     private static final String EXPECTED_JSON_NODE_FILE_PATH = "src/test/resources/expectedNode.json";
     private static final String EXPECTED_NODE_ORIGIN_URL = "https://api-v3.mojepanstwo.pl/dane/poslowie/100";
 
@@ -115,10 +112,5 @@ class ApiHelperTest {
         }
 
         assertEquals(expected, actual);
-    }
-
-    @Test
-    void streamListThrowsOnInvalidRequest() {
-
     }
 }

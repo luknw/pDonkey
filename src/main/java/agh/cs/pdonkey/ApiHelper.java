@@ -90,7 +90,6 @@ class ApiHelper {
         String baseUrl = urlBase.append(ELEMENTS_PER_PAGE).append(PAGE).toString();
 
         //change size of the common fork join pool to speed up parallel streams
-        Integer oldParallelism = ForkJoinPool.getCommonPoolParallelism();
         System.setProperty(COMMON_FORK_JOIN_POOL_SIZE, Integer.toString(PARALLELISM));
 
         Stream<JsonNode> result;
@@ -113,8 +112,6 @@ class ApiHelper {
         } catch (UncheckedIOException e) {
             throw new IOException(e.getMessage(), e);
         }
-
-        System.setProperty(COMMON_FORK_JOIN_POOL_SIZE, oldParallelism.toString());
 
         return result;
     }

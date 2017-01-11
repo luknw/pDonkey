@@ -39,15 +39,6 @@ class DataProcessorImplTest {
     }
 
     @Test
-    void getExpensesSumThrowsExceptionOnInvalidMP() {
-        try {
-            dp.getExpensesSum(nemesis);
-            fail(INVALID_MP_NO_EXCEPTION);
-        } catch (IOException ignored) {
-        }
-    }
-
-    @Test
     void getMinorExpensesJustWorks() {
         double expected = 0;
 
@@ -59,15 +50,6 @@ class DataProcessorImplTest {
         }
 
         assertEquals(expected, actual, EPSILON);
-    }
-
-    @Test
-    void getMinorExpensesThrowsExceptionOnInvalidMP() {
-        try {
-            dp.getMinorExpenses(nemesis);
-            fail(INVALID_MP_NO_EXCEPTION);
-        } catch (IOException ignored) {
-        }
     }
 
     @Test
@@ -141,4 +123,21 @@ class DataProcessorImplTest {
         assertEquals(expected, actual);
     }
 
+    @Test
+    void getExpensesSumThrowsExceptionOnInvalidMP() {
+        try {
+            dp.getExpensesSum(nemesis);
+            fail(INVALID_MP_NO_EXCEPTION);
+        } catch (IOException ignored) {
+        }
+    }
+
+    @Test
+    void getMinorExpensesThrowsExceptionOnInvalidMP() {
+        try {
+            dp.getMinorExpenses(nemesis);
+            fail(INVALID_MP_NO_EXCEPTION);
+        } catch (IOException ignored) {
+        }
+    }
 }
