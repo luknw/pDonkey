@@ -16,13 +16,12 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 
 class DataProcessorImplTest {
-    private static final DataProcessor DP = new DataProcessorImpl();
-    private static final MP VOLUNTEER = new MPImpl("Jarosław Kaczyński");
-    private static final MP NEMESIS = new MPImpl("Bronisław Komorowski");
-
     private static final String UNEXPECTED_IO_EXCEPTION = "Unexpected IO exception";
     private static final String INVALID_MP_NO_EXCEPTION = "Invalid MP didn't cause exception";
     private static final double EPSILON = 1e-6;
+    private final DataProcessor dp = new DataProcessorImpl();
+    private final MP volunteer = new MPImpl("Jarosław Kaczyński");
+    private final MP nemesis = new MPImpl("Bronisław Komorowski");
 
     @Test
     void getExpensesSumJustWorks() {
@@ -30,7 +29,7 @@ class DataProcessorImplTest {
 
         double actual = 0;
         try {
-            actual = DP.getExpensesSum(VOLUNTEER);
+            actual = dp.getExpensesSum(volunteer);
         } catch (IOException e) {
             fail(UNEXPECTED_IO_EXCEPTION);
         }
@@ -44,7 +43,7 @@ class DataProcessorImplTest {
 
         double actual = 1;
         try {
-            actual = DP.getMinorExpenses(VOLUNTEER);
+            actual = dp.getMinorExpenses(volunteer);
         } catch (IOException e) {
             fail(UNEXPECTED_IO_EXCEPTION);
         }
@@ -58,7 +57,7 @@ class DataProcessorImplTest {
 
         double actual = 1;
         try {
-            actual = DP.getAvgMpsExpenses();
+            actual = dp.getAvgMpsExpenses();
         } catch (IOException e) {
             fail(UNEXPECTED_IO_EXCEPTION);
         }
@@ -72,7 +71,7 @@ class DataProcessorImplTest {
 
         MP actual = null;
         try {
-            actual = DP.getTopTravellerMp();
+            actual = dp.getTopTravellerMp();
         } catch (IOException e) {
             fail(UNEXPECTED_IO_EXCEPTION);
         }
@@ -86,7 +85,7 @@ class DataProcessorImplTest {
 
         MP actual = null;
         try {
-            actual = DP.getTopTimeAbroadMp();
+            actual = dp.getTopTimeAbroadMp();
         } catch (IOException e) {
             fail(UNEXPECTED_IO_EXCEPTION);
         }
@@ -100,7 +99,7 @@ class DataProcessorImplTest {
 
         MP actual = null;
         try {
-            actual = DP.getMostExpensiveTravelMp();
+            actual = dp.getMostExpensiveTravelMp();
         } catch (IOException e) {
             fail(UNEXPECTED_IO_EXCEPTION);
         }
@@ -115,7 +114,7 @@ class DataProcessorImplTest {
 
         List<MP> actual = null;
         try {
-            actual = DP.getMacaronieris();
+            actual = dp.getMacaronieris();
         } catch (IOException e) {
             fail(UNEXPECTED_IO_EXCEPTION);
         }
@@ -126,7 +125,7 @@ class DataProcessorImplTest {
     @Test
     void getExpensesSumThrowsExceptionOnInvalidMP() {
         try {
-            DP.getExpensesSum(NEMESIS);
+            dp.getExpensesSum(nemesis);
             fail(INVALID_MP_NO_EXCEPTION);
         } catch (IOException ignored) {
         }
@@ -135,7 +134,7 @@ class DataProcessorImplTest {
     @Test
     void getMinorExpensesThrowsExceptionOnInvalidMP() {
         try {
-            DP.getMinorExpenses(NEMESIS);
+            dp.getMinorExpenses(nemesis);
             fail(INVALID_MP_NO_EXCEPTION);
         } catch (IOException ignored) {
         }

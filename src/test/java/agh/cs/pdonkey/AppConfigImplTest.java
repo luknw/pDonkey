@@ -11,17 +11,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class AppConfigImplTest {
 
-    private static final MP MP = new MPImpl("foo");
-    private static final AppConfig CONFIG = new AppConfigImpl(AppMode.MACARONIERIS, MP);
+    private final MP mp = new MPImpl("foo");
+    private final AppConfig config = new AppConfigImpl(AppMode.MACARONIERIS, mp);
 
     @Test
     void getModeJustWorks() {
-        assertEquals(AppMode.MACARONIERIS, CONFIG.getMode());
+        assertEquals(AppMode.MACARONIERIS, config.getMode());
     }
 
     @Test
     void getMPJustWorks() {
-        assertEquals(MP, CONFIG.getMP());
+        assertEquals(mp, config.getMP());
     }
 
 }

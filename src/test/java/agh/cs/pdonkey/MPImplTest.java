@@ -12,46 +12,46 @@ import static org.junit.jupiter.api.Assertions.*;
 class MPImplTest {
     private static final String ADVENTUROUS_MP = "Bruce Wayne";
     private static final String WE_DONT_NEED_ANOTHER = "Batman";
-    private static final MP MP = new MPImpl(ADVENTUROUS_MP);
+    private final MP mp = new MPImpl(ADVENTUROUS_MP);
 
     @Test
     void getNameJustWorks() {
-        assertEquals(ADVENTUROUS_MP, MP.getName());
+        assertEquals(ADVENTUROUS_MP, mp.getName());
     }
 
     @Test
     void equalsTrueWhenSame() {
         MP alterEgo = new MPImpl(ADVENTUROUS_MP);
 
-        assertTrue(alterEgo.equals(MP));
-        assertTrue(MP.equals(alterEgo));
+        assertTrue(alterEgo.equals(mp));
+        assertTrue(mp.equals(alterEgo));
     }
 
     @Test
     void equalsFalseWhenDifferent() {
         MP alterEgo = new MPImpl(WE_DONT_NEED_ANOTHER);
 
-        assertFalse(alterEgo.equals(MP));
-        assertFalse(MP.equals(alterEgo));
+        assertFalse(alterEgo.equals(mp));
+        assertFalse(mp.equals(alterEgo));
     }
 
     @Test
     void hashCodeSameWhenSame() {
         MP alterEgo = new MPImpl(ADVENTUROUS_MP);
 
-        assertEquals(alterEgo.hashCode(), MP.hashCode());
+        assertEquals(alterEgo.hashCode(), mp.hashCode());
     }
 
     @Test
     void hashCodeDifferentWhenDifferent() {
         MP alterEgo = new MPImpl(WE_DONT_NEED_ANOTHER);
 
-        assertNotEquals(alterEgo.hashCode(), MP.hashCode());
+        assertNotEquals(alterEgo.hashCode(), mp.hashCode());
     }
 
     @Test
     void toStringJustWorks() {
-        assertEquals(ADVENTUROUS_MP, MP.toString());
+        assertEquals(ADVENTUROUS_MP, mp.toString());
     }
 
 }

@@ -14,14 +14,14 @@ class OptionsParserImplTest {
     private static final String EMPTY_ARGS_NO_EXCEPTION = "Empty args list didn't cause IllegalArgumentException";
     private static final String MISSING_MP_NO_EXCEPTION = "Missing MP identity didn't cause IllegalArgumentException";
 
-    private static final OptionsParser PARSER = new OptionsParserImpl();
+    private final OptionsParser parser = new OptionsParserImpl();
 
     @Test
     void parseEmptyArgs() {
         String[] args = {};
 
         try {
-            PARSER.parse(args);
+            parser.parse(args);
             fail(EMPTY_ARGS_NO_EXCEPTION);
         } catch (IllegalArgumentException ignored) {
         }
@@ -32,7 +32,7 @@ class OptionsParserImplTest {
         String[] args = {"travels", "dummy", "hummy"};
         AppConfig validConfig = new AppConfigImpl(AppMode.TOP_TRAVELS_ABROAD, new MPImpl("dummy"));
 
-        AppConfig config = PARSER.parse(args);
+        AppConfig config = parser.parse(args);
 
         assertEquals(validConfig.getMode(), config.getMode());
     }
@@ -42,7 +42,7 @@ class OptionsParserImplTest {
         String[] args = {"sum"};
 
         try {
-            PARSER.parse(args);
+            parser.parse(args);
             fail(MISSING_MP_NO_EXCEPTION);
         } catch (IllegalArgumentException ignored) {
         }
