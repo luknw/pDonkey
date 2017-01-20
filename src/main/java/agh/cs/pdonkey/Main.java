@@ -9,8 +9,6 @@ import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) {
-        //todo add tests
-        //todo add exception messages
         AppConfig config;
         try {
             config = new OptionsParserImpl().parse(args);
